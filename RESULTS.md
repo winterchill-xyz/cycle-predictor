@@ -108,6 +108,38 @@ real-world regime** — a new app user with one or two logged cycles — and it'
 partial pooling pays off most. mcPHASES also gives LH-verified ovulation (median day
 16), the substrate for the future signal-rich model (M5).
 
+## M5 — signal-rich model (mcPHASES biosignals)  ✅
+
+Reproduce: `.venv/bin/python scripts/analyze_signals_mcphases.py`. Uses the daily
+hormones + wearables. A cycle = variable **follicular** phase + stable **luteal**
+phase, so observing ovulation mid-cycle sharpens the next-period forecast.
+
+**Phase stability** (74 LH-surge-confirmed cycles): whole-cycle sd **4.49 d** vs
+luteal-length sd **3.08 d** — the luteal phase is the stable part, confirming the
+two-phase premise. The wearable signals carry the phase: nightly skin temperature is
+**+0.31 °C** in the luteal vs follicular phase (the classic biphasic thermal shift);
+respiratory rate rises too.
+
+**Two-phase next-period model** (fit luteal length on train users, test on held-out):
+
+| predictor | next-period MAE (d) |
+|-----------|--------------------:|
+| baseline (population mean, no ovulation) | 3.64 |
+| **two-phase, LH-surge ovulation observed** | **1.98** |
+| two-phase, wearable thermal-shift ovulation | 5.23 |
+
+**Headline:** once ovulation is known mid-cycle, next-period MAE drops **3.64 → 1.98
+(−46%)** — the forecast sharpens toward the luteal sd as the cycle progresses, which
+a whole-cycle model can't do. This is the mHealth value: a mid-cycle LH test (or a
+good temperature sensor) buys a much tighter period prediction.
+
+**Honest limitation:** the *wearable-only* path underperforms. The nightly
+skin-temperature thermal-shift detector fires on ~52% of cycles and lands ~6 d from
+the LH-surge ovulation — consumer-wearable skin temp is noisier than clinical BBT, so
+the simple coverline rule isn't accurate enough to replace a hormone test yet.
+Improving it (intraday wrist temperature, multi-signal fusion of temp + resting HR +
+respiratory rate, per-user baselines) is the clear next step.
+
 ## Caveats
 
 - FedCycle is small and unusually regular (NFP users) — absolute MAEs here are lower

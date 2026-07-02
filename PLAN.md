@@ -75,9 +75,16 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
   features (rolling stats, variability, recent deltas, age/BMI). Expected: not
   better than M3 on MAE — used to bound the problem and for ablations.
 
-### M5 — Signal-rich model (optional, needs mcPHASES/BBT)
-- State-space / phase-latent model on BBT (Fukaya-style) or HSMM for phase
-  labeling (Symul & Holmes). Only once a temperature/hormone dataset is in hand.
+### M5 — Signal-rich model (mcPHASES biosignals)  ✅
+- Two-phase model (`models/twophase.py`): follicular (variable) + luteal (stable,
+  sd 3.08 d) split. Observing ovulation mid-cycle cuts next-period MAE **3.64 → 1.98
+  (−46%)**. Wearable thermal-shift ovulation detector (`models/ovulation.py`) from
+  nightly skin temperature — real signal (+0.31 °C luteal) but ~6 d MAE, not yet
+  accurate enough to replace an LH test. Signal alignment in
+  `data/mcphases_signals.py`; analysis in `scripts/analyze_signals_mcphases.py`.
+- **Next:** better ovulation detection (intraday wrist temp, multi-signal fusion of
+  temp + resting HR + respiratory rate, per-user baselines); a Fukaya-style
+  phase-latent state-space model; fold ovulation timing into the generative model.
 
 ### M6 — Packaging
 - `predict_next_period(history) -> distribution`; model card documenting metrics
