@@ -6,7 +6,10 @@ import statistics
 import pytest
 
 pytest.importorskip("numpy")
-from cycle_predictor.models.generative import SkipAwareGenerative  # noqa: E402
+from cycle_predictor.eval import evaluate_prob                         # noqa: E402
+from cycle_predictor.models.generative import (                        # noqa: E402
+    SkipAwareGenerative, SkipAwareGenPoisson,
+)
 
 
 def test_coldstart_is_prior_mean():
@@ -65,3 +68,38 @@ def test_pymc_fit_recovers_rate_and_detects_skips():
     assert m.diagnostics["method"] == "pymc"
     assert 26.0 < math.exp(m.mu_log) < 32.0       # recovers population rate
     assert m.pi > 0.01                            # detects that skips happen
+
+
+# --------------------------------------------------------------- Generalized Poisson
+def _underdispersed(seed, n_users=200, mu=29.0, sd=2.9, k=8):
+    rng = random.Random(seed)
+    return [[max(1, round(rng.gauss(mu, sd))) for _ in range(k)] for _ in range(n_users)]
+
+
+def test_gp_detects_underdispersion():
+    m = SkipAwareGenPoisson.fit_moments(_underdispersed(0))
+    assert m.xi < 0                      # variance < mean ⇒ xi negative
+    assert m.diagnostics["phi"] < 1.0
+
+
+def test_gp_calibration_near_nominal_on_underdispersed():
+    train, test = _underdispersed(1), _underdispersed(2)
+    m = SkipAwareGenPoisson.fit_moments(train)
+    pm = evaluate_prob(m.predict, test, levels=(0.8,))
+    assert 0.70 <= pm.coverage[0.8] <= 0.90
+
+
+def test_gp_intervals_tighter_than_poisson():
+    # On under-dispersed data the Poisson (v2) intervals are too wide; GP fixes it.
+    train, test = _underdispersed(3), _underdispersed(4)
+    pois = evaluate_prob(SkipAwareGenerative.fit_moments(train, pi=0.05).predict, test, levels=(0.8,))
+    gp = evaluate_prob(SkipAwareGenPoisson.fit_moments(train).predict, test, levels=(0.8,))
+    assert gp.sharpness[0.8] < pois.sharpness[0.8]                 # tighter
+    assert abs(gp.coverage[0.8] - 0.8) < abs(pois.coverage[0.8] - 0.8)   # better-calibrated
+
+
+def test_gp_still_skip_robust():
+    m = SkipAwareGenPoisson.fit_moments(_underdispersed(5), pi=0.06)
+    regular = [28, 29, 28, 27, 29]
+    gen = m.predict(regular + [56])[0]
+    assert gen < statistics.fmean(regular + [56]) - 2.0     # explains the skip

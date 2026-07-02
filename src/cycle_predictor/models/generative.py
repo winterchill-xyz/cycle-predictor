@@ -25,19 +25,22 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from statistics import fmean
 from typing import Sequence
 
 import numpy as np
 
 
 def _logsumexp(a, axis=None):
+    # Robust to all -inf slices (returns -inf, not nan): GP support can make a whole
+    # (grid, skip) row impossible.
     a = np.asarray(a, dtype=float)
-    if axis is None:
-        m = float(np.max(a))
-        return m + math.log(float(np.sum(np.exp(a - m))))
     m = np.max(a, axis=axis, keepdims=True)
-    out = m + np.log(np.sum(np.exp(a - m), axis=axis, keepdims=True))
-    return np.squeeze(out, axis=axis)
+    m_safe = np.where(np.isfinite(m), m, 0.0)
+    with np.errstate(divide="ignore"):
+        s = np.log(np.sum(np.exp(a - m_safe), axis=axis, keepdims=True))
+    out = np.where(np.isfinite(m), m_safe + s, m)
+    return float(np.squeeze(out)) if axis is None else np.squeeze(out, axis=axis)
 
 
 @dataclass
@@ -144,3 +147,107 @@ class SkipAwareGenerative:
                    float(post["pi"].mean()), s_max=s_max,
                    diagnostics={"method": "pymc", "users": U,
                                 "pi": float(post["pi"].mean())}, **kw)
+
+
+@dataclass
+class SkipAwareGenPoisson:
+    """Skip-aware GENERALIZED-Poisson model (PLAN.md M3 v2.1).
+
+    Same skip story as SkipAwareGenerative, but the component distribution is the
+    Consul Generalized Poisson GP(lambda, xi) instead of Poisson. Two facts make
+    this the right upgrade:
+
+      * GP is closed under convolution: sum of m iid GP(lambda, xi) = GP(m*lambda,
+        xi). So a skip of s still gives  observed ~ GP((1+s)*lambda, xi)  — the
+        marginalization is unchanged.
+      * xi is a second free parameter: mean = lambda/(1-xi), var = lambda/(1-xi)^3.
+        xi < 0 gives UNDER-dispersion (var < mean), which real cycle lengths have
+        (within-user sd ~2.9 d vs Poisson's sqrt(29) ~5.4 d). This fixes v2's
+        over-wide, over-covering intervals.
+
+    We fit xi by moment-matching the dispersion ratio phi = var/mean of the
+    training cycles (phi = 1/(1-xi)^2 ⇒ xi = 1 - phi**-0.5), i.e. literally fitting
+    the mean and the variance separately — the Generalized-Poisson selling point.
+    Prediction is the same per-user 1-D grid posterior over lambda; the next true
+    cycle's predictive uses mean=E[lambda]/(1-xi), var=E[lambda]/(1-xi)^3 +
+    Var(lambda)/(1-xi)^2.
+    """
+    mu_log: float
+    tau: float
+    pi: float
+    xi: float                     # dispersion; xi < 0 => under-dispersed
+    s_max: int = 3
+    lam_min: float = 12.0
+    lam_max: float = 140.0
+    grid: int = 240
+    diagnostics: dict | None = None
+    _built: bool = field(default=False, repr=False)
+
+    def __post_init__(self):
+        S = np.arange(0, self.s_max + 1)
+        self._mult = (1 + S).astype(float)
+        logw = np.log(1 - self.pi) + S * np.log(self.pi)
+        self._logw = logw - _logsumexp(logw)
+        self._loglam = np.linspace(math.log(self.lam_min), math.log(self.lam_max), self.grid)
+        self._lam = np.exp(self._loglam)
+        self._logprior = (-0.5 * ((self._loglam - self.mu_log) / self.tau) ** 2
+                          - math.log(self.tau) - 0.5 * math.log(2 * math.pi))
+        self._a = self._mult[None, :] * self._lam[:, None]     # (G,K) = (1+s)*lambda
+        self._log_a = np.log(self._a)
+        self._c1 = 1.0 / (1.0 - self.xi)
+        self._c3 = 1.0 / (1.0 - self.xi) ** 3
+        self._built = True
+
+    def _loglik_obs(self, d: int) -> np.ndarray:
+        # GP logpmf for integer d over the grid (drop const -lgamma(d+1)); the GP
+        # support requires a + d*xi > 0, else that (grid, skip) cell is impossible.
+        arg = self._a + d * self.xi
+        with np.errstate(invalid="ignore", divide="ignore"):
+            lp = self._log_a + (d - 1) * np.log(arg) - arg
+        lp = np.where(arg > 0, lp, -np.inf)
+        return _logsumexp(self._logw[None, :] + lp, axis=1)
+
+    def _log_posterior(self, history: Sequence[float]) -> np.ndarray:
+        logpost = self._logprior.copy()
+        for d in history:
+            logpost = logpost + self._loglik_obs(max(1, int(round(d))))
+        return logpost - _logsumexp(logpost)
+
+    def predict(self, history: Sequence[float]) -> tuple[float, float]:
+        post = np.exp(self._log_posterior(history))
+        elam = float(np.sum(post * self._lam))
+        var_lam = max(float(np.sum(post * self._lam ** 2)) - elam ** 2, 0.0)
+        mean = elam * self._c1
+        var = elam * self._c3 + var_lam * self._c1 ** 2
+        return mean, math.sqrt(var)
+
+    def point(self, history: Sequence[float]) -> float:
+        return self.predict(history)[0]
+
+    @classmethod
+    def fit_moments(cls, train_sequences, pi: float = 0.05, **kw) -> "SkipAwareGenPoisson":
+        """Method-of-moments fit: population log-rate from user means, dispersion xi
+        from the pooled within-user variance/mean ratio."""
+        users = [list(s) for s in train_sequences if len(s) > 0]
+        if not users:
+            raise ValueError("no training data")
+        user_means = [fmean(s) for s in users]
+
+        ss, df, tot, cnt = 0.0, 0, 0.0, 0
+        for s in users:
+            if len(s) >= 2:
+                m = fmean(s)
+                ss += sum((x - m) ** 2 for x in s)
+                df += len(s) - 1
+                tot += sum(s)
+                cnt += len(s)
+        within_var = ss / df if df > 0 else 9.0
+        within_mean = tot / cnt if cnt > 0 else fmean(user_means)
+        phi = min(max(within_var / within_mean if within_mean else 1.0, 0.05), 3.0)
+        xi = 1.0 - phi ** -0.5                                  # phi<1 => xi<0
+
+        log_mu = np.log(np.asarray(user_means, dtype=float))
+        mu_log = float(log_mu.mean()) + math.log(1 - xi)       # log(lambda)=log(mu)+log(1-xi)
+        tau = float(log_mu.std(ddof=1)) or 0.1
+        return cls(mu_log, tau, pi, xi,
+                   diagnostics={"method": "moments", "phi": phi, "xi": xi}, **kw)
