@@ -57,9 +57,15 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
   falls back to the population prior. See RESULTS.md.
 - Reproduces the qualitative Urteaga/Li story: **ties/beats baselines on MAE, wins
   on cold-start, and gives ~calibrated intervals** (80% → 85% coverage).
-- **v2 (next):** add the **latent skipped-cycle count** so an observed length can be
-  `(1+s)` true cycles (Truncated-Geometric skip prior, marginalized) — the actual
-  generative SOTA. Needs a dataset with more skip artifacts than FedCycle to shine.
+### M3 v2 — skip-aware generative model  ✅
+- `models/generative.py`: observed length ~ Poisson((1+s)·λ_i), latent skip count
+  `s` ~ Geometric(π) marginalized out; PyMC fits (μ_log, τ, π), per-user 1-D grid
+  posterior predicts. Explains a ~2× cycle as a forgotten log instead of a real one.
+- Proven by `scripts/demo_skip_robustness.py`: under injected skips v2 holds ~2.3 d
+  MAE while v1/naive degrade to 10–12 d at p=0.3. On clean FedCycle v2 ≈ v1.
+- **v2.1 (next):** swap the Poisson likelihood for the **Generalized Poisson**
+  (Urteaga) — Poisson is over-dispersed for cycle lengths, so v2's intervals
+  over-cover (80% → 98%). GP fits mean and variance separately → calibrated.
 
 ### M4 — Baselines to beat/borrow: sequence + GBM
 - LSTM/GRU over the cycle-length sequence (+ covariates); LightGBM on engineered
@@ -82,9 +88,9 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
 - Privacy: menstrual data is sensitive; keep raw data local and gitignored.
 
 ## Immediate next actions
-1. **M3 v2:** add the latent skipped-cycle count to the generative model.
+1. **M3 v2.1:** Generalized-Poisson likelihood to fix v2's interval over-coverage.
 2. Acquire a more variable dataset (mcPHASES credentialing, or a request to Clue /
-   Natural Cycles / Sympto-Kindara) to exercise irregular/PCOS + skip handling.
+   Natural Cycles / Sympto-Kindara) to exercise irregular/PCOS + real skip handling.
 3. **M4:** LSTM/GRU + LightGBM baselines (needs torch/lightgbm on the 3.12 venv) to
    confirm they don't beat the generative model on point MAE (per the literature).
-4. Sharpen calibration (the v1 intervals slightly over-cover: 80% → 85%).
+4. Per-user skip probability π_i (currently population-level) for v2.
