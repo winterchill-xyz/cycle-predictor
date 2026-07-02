@@ -26,7 +26,9 @@ from cycle_predictor.eval import (                            # noqa: E402
 )
 from cycle_predictor.models import baselines                  # noqa: E402
 from cycle_predictor.models.hierarchical import HierarchicalBayes  # noqa: E402
-from cycle_predictor.models.generative import SkipAwareGenerative  # noqa: E402
+from cycle_predictor.models.generative import (                   # noqa: E402
+    SkipAwareGenerative, SkipAwareGenPoisson,
+)
 
 
 def main() -> int:
@@ -51,12 +53,16 @@ def main() -> int:
     print(f"v1 [{model.diagnostics.get('method')}]: mu_pop={model.mu_pop:.2f}  "
           f"tau={model.tau2**0.5:.2f}  sigma={model.sigma2**0.5:.2f}")
     print(f"v2 [{gen.diagnostics.get('method')}]: rate={math.exp(gen.mu_log):.2f}  "
-          f"pi={gen.pi:.3f} (skips/cycle={gen.expected_skip_rate():.3f})\n")
+          f"pi={gen.pi:.3f} (skips/cycle={gen.expected_skip_rate():.3f})")
+    genp = SkipAwareGenPoisson.fit_moments(train, pi=0.05)   # moment-matched dispersion
+    print(f"v2.1 [genpoisson]: xi={genp.xi:.3f} (phi={genp.diagnostics['phi']:.3f}, "
+          f"xi<0 ⇒ under-dispersed)\n")
 
     # ---- overall point accuracy on held-out users -------------------------------
     predictors = dict(baselines.registry())
     predictors["hierarchical_v1"] = model.point
     predictors["skip_generative_v2"] = gen.point
+    predictors["skip_genpoisson_v2.1"] = genp.point
 
     hdr = f"{'predictor':20s} {'MAE':>6s} {'RMSE':>6s} {'±1d':>6s} {'±2d':>6s} {'coldMAE':>8s}"
     print(hdr); print("-" * len(hdr))
@@ -68,11 +74,13 @@ def main() -> int:
 
     # ---- calibration of the two Bayesian models ---------------------------------
     print("\ncalibration:")
-    print(f"  v1 hierarchical:    {evaluate_prob(model.predict, test)}")
-    print(f"  v2 skip-generative: {evaluate_prob(gen.predict, test)}")
+    print(f"  v1 hierarchical:      {evaluate_prob(model.predict, test)}")
+    print(f"  v2 skip-poisson:      {evaluate_prob(gen.predict, test)}")
+    print(f"  v2.1 skip-genpoisson: {evaluate_prob(genp.predict, test)}")
     print("  (well-calibrated ⇒ e.g. the 80% interval covers ~80% of held-out cycles)")
-    print("\nNote: FedCycle has ~no skip artifacts, so v2≈v1 here. "
-          "See scripts/demo_skip_robustness.py for where v2 wins.")
+    print("\nNote: FedCycle has ~no skip artifacts, so point accuracy is ~tied. v2 (plain")
+    print("Poisson) over-covers; v2.1 (Generalized Poisson) fixes calibration. See")
+    print("scripts/demo_skip_robustness.py for where the skip-aware models win on point.")
     return 0
 
 
