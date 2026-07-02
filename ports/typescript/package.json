@@ -1,0 +1,13 @@
+{
+  "name": "cycle-predictor",
+  "version": "0.0.1",
+  "description": "Dependency-free cycle predictor (TypeScript port) — next-period date + calibrated interval",
+  "type": "module",
+  "main": "cyclePredictor.ts",
+  "types": "cyclePredictor.ts",
+  "scripts": {
+    "validate": "node --experimental-strip-types validate.ts"
+  },
+  "license": "MIT",
+  "sideEffects": false
+}
