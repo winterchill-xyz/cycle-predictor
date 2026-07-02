@@ -140,6 +140,28 @@ the simple coverline rule isn't accurate enough to replace a hormone test yet.
 Improving it (intraday wrist temperature, multi-signal fusion of temp + resting HR +
 respiratory rate, per-user baselines) is the clear next step.
 
+## Unified predictor — graceful degradation (production shape)
+
+Real users log different things: most have **only past period dates**, some also have
+**LH tests** or a **wearable temperature** stream. `models/unified.py` always predicts
+from cycle-length history and *opportunistically* sharpens per cycle:
+LH surge → wearable thermal shift → history-only, in that order. Reproduce:
+`.venv/bin/python scripts/eval_unified.py` (mcPHASES held-out cycles).
+
+| evidence used this cycle | share | MAE (d) |
+|--------------------------|------:|--------:|
+| LH surge (two-phase) | 64% | 1.98 |
+| wearable thermal shift (two-phase) | 21% | 4.83 |
+| history only (generative backbone) | 14% | 3.88 |
+| **unified (best available)** | 100% | **2.86** |
+| history-only floor (no devices at all) | 100% | 4.32 |
+
+Using whatever each user logged cuts MAE **4.32 → 2.86 (−34%)** versus a device-free
+floor, and **nothing breaks when signals are missing** — a brand-new user with no
+history and no devices still gets a calibrated prediction from the population prior.
+(The wearable-only row is weak for the same reason as M5: the skin-temp detector is
+noisy; LH is the reliable sharpener today.)
+
 ## Caveats
 
 - FedCycle is small and unusually regular (NFP users) — absolute MAEs here are lower

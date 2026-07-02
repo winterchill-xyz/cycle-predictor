@@ -38,6 +38,16 @@ distribution**, not only a point estimate.
    engineered features.
 4. Optional: state-space / BBT model when temperature data is present.
 
+## Production shape: predict from whatever the user logged
+
+Users differ in what they have — most log **only period dates**; some add **LH tests**
+or a **wearable**. `models/unified.py` (`UnifiedPredictor`) is the entrypoint: it
+always predicts from cycle-length history (the calibrated, cold-start-robust
+Generalized-Poisson backbone) and *opportunistically* sharpens when a cycle has an LH
+surge or a wearable thermal shift (the two-phase model). It never requires a signal
+that may be absent, and every prediction reports its `mode`. Never assume wearable/
+hormone data is present — treat it as an optional sharpener over the history backbone.
+
 ## Canonical data schema
 
 Every dataset is normalized by an adapter to **one row per `(user_id, cycle_number)`**:
