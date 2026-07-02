@@ -74,10 +74,26 @@ Credentials live in **`../winterchill/.env`** (`BRIGHTDATA_*` Web Unlocker,
    CONNECT tunnel and file writes (symptom: HTTP 000 / empty files that silently
    don't appear). With Bash, set `dangerouslyDisableSandbox: true` for fetches.
 
+## Environment (important)
+
+System Python here is **3.14**, which lacks wheels for the heavy libs. The project
+venv is **Python 3.12** (full wheel support), created with `uv`:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python numpy scipy pandas pymc arviz pytest ruff
+.venv/bin/python scripts/eval_models.py   # PyMC fit; --fast for method-of-moments
+.venv/bin/python -m pytest -q             # 14 tests (incl a PyMC smoke test)
+```
+
+The stdlib-only parts (data adapter, eval harness, baselines, downloaders) run on
+any Python; only the PyMC fit needs the venv (it falls back to a method-of-moments
+fit if PyMC is absent). Current results live in `RESULTS.md`.
+
 ## Conventions
 
-- Python 3.11+. Library code under `src/cycle_predictor`, importable as
-  `cycle_predictor` (`pip install -e .` once `pyproject` is added).
+- Library code under `src/cycle_predictor`, importable as `cycle_predictor`
+  (`pyproject.toml` sets `pythonpath=src` for pytest; `pip install -e .` also works).
 - **Never commit** `.env`, raw data, or PDFs — all gitignored. Commit the
   *catalogues* (`research/papers.csv`, `data/DATASETS.md`) and *fetch scripts* so
   downloads are reproducible.

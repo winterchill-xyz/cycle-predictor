@@ -38,27 +38,28 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
 ### M0 — Scaffold & data access  ✅ (this pass)
 - Repo, docs, downloaders, catalogues. Fetch FedCycle; apply for mcPHASES.
 
-### M1 — Data pipeline & EDA
-- FedCycle adapter → canonical schema; notebook EDA (cycle-length distribution,
-  per-user variance, regular vs irregular split, obvious skip artifacts as
-  bimodal length peaks near 2×).
-- Define the **irregular** flag and a **PCOS/irregular** holdout for later.
+### M1 — Data pipeline & EDA  ✅
+- FedCycle adapter → canonical schema (`src/cycle_predictor/data/fedcycle.py`).
+- EDA (`scripts/eda_fedcycle.py`): regular NFP cohort (within-user SD median 2.1 d),
+  **19% of users have ≤3 cycles** (cold-start), skip artifacts rare (0.1%).
+  Conclusion: point MAE is easy here → **calibration is the goal**.
+- TODO: an explicit irregular/PCOS holdout once a more variable dataset is in hand.
 
-### M2 — Baselines + evaluation harness
-- Baselines: 28-day constant, last-cycle, personal mean, personal median, rolling
-  mean (window k).
-- Harness: time-ordered per-user splits; **user-holdout** split for cold-start;
-  metrics = MAE, RMSE, within-±1/±2-day, interval coverage. Report overall +
-  regular/irregular subgroups. This harness is the contract every model plugs into.
+### M2 — Baselines + evaluation harness  ✅
+- Baselines (`models/baselines.py`): 28-day constant, last-cycle, personal
+  mean/median, rolling mean.
+- Harness (`eval.py`): user-holdout `split`, point `evaluate` (+ `max_history`
+  cold-start slice), probabilistic `evaluate_prob` (interval coverage + sharpness).
 
-### M3 — Bayesian hierarchical generative model (the target)
-- Partial-pooling model: population prior → per-user `λ_i` (typical length),
-  per-user variability; **latent skipped-cycle count** so an observed length can be
-  explained as `(1+s)` true cycles (Truncated-Geometric skip prior, marginalized).
-- Implement in PyMC (NumPyro backend for speed). Posterior predictive → calibrated
-  intervals. Cold-start users fall back to the population prior.
-- Reproduce the qualitative Urteaga/Li result: match baselines on MAE, **win on
-  calibration** and early (6–8 day-ahead) accuracy.
+### M3 — Hierarchical Bayesian model (v1)  ✅
+- Normal-Normal partial pooling (`models/hierarchical.py`): PyMC fits population
+  hyperparameters; closed-form conjugate posterior-predictive per user; cold-start
+  falls back to the population prior. See RESULTS.md.
+- Reproduces the qualitative Urteaga/Li story: **ties/beats baselines on MAE, wins
+  on cold-start, and gives ~calibrated intervals** (80% → 85% coverage).
+- **v2 (next):** add the **latent skipped-cycle count** so an observed length can be
+  `(1+s)` true cycles (Truncated-Geometric skip prior, marginalized) — the actual
+  generative SOTA. Needs a dataset with more skip artifacts than FedCycle to shine.
 
 ### M4 — Baselines to beat/borrow: sequence + GBM
 - LSTM/GRU over the cycle-length sequence (+ covariates); LightGBM on engineered
@@ -81,6 +82,9 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
 - Privacy: menstrual data is sensitive; keep raw data local and gitignored.
 
 ## Immediate next actions
-1. `scripts/fetch_datasets.py --only fedcycle` → `data/raw/fedcycle/`.
-2. Write the FedCycle adapter + an EDA notebook (M1).
-3. Stand up the evaluation harness with baselines (M2) before any fancy model.
+1. **M3 v2:** add the latent skipped-cycle count to the generative model.
+2. Acquire a more variable dataset (mcPHASES credentialing, or a request to Clue /
+   Natural Cycles / Sympto-Kindara) to exercise irregular/PCOS + skip handling.
+3. **M4:** LSTM/GRU + LightGBM baselines (needs torch/lightgbm on the 3.12 venv) to
+   confirm they don't beat the generative model on point MAE (per the literature).
+4. Sharpen calibration (the v1 intervals slightly over-cover: 80% → 85%).
