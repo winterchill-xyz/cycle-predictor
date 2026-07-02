@@ -86,9 +86,13 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
   temp + resting HR + respiratory rate, per-user baselines); a Fukaya-style
   phase-latent state-space model; fold ovulation timing into the generative model.
 
-### M6 — Packaging
-- `predict_next_period(history) -> distribution`; model card documenting metrics
-  per subgroup, calibration plots, and **limitations** (PCOS, cold-start, licensing).
+### M6 — Packaging  ✅
+- `cycle_predictor.api.predict_next_period(user_log) -> PeriodForecast` (date +
+  calibrated interval + mode). Works cold-start via baked-in population priors;
+  sharpens with LH/wearable when present. Wraps the `UnifiedPredictor`.
+- **Next:** a model card (per-subgroup metrics, calibration plots, limitations —
+  PCOS, cold-start, licensing) and pinning the default hyperparameters to a
+  versioned fit artifact rather than inline constants.
 
 ## Non-goals / cautions
 - Not a medical device; predictions are estimates with uncertainty, never

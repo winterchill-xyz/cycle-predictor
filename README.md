@@ -36,6 +36,26 @@ python scripts/fetch_datasets.py --only fedcycle
 python scripts/fetch_pdfs.py --catalogue research/papers.csv
 ```
 
+## Using the predictor
+
+```python
+from cycle_predictor.api import predict_next_period, UserLog
+
+# Most users log only period dates — works out of the box (population priors):
+f = predict_next_period(UserLog(period_starts=["2026-05-04", "2026-06-01", "2026-06-30"]))
+print(f)
+# Next period ~2026-07-29 (in 29d; 80% window Jul 25…Aug 02) — via history, 2 prior cycle(s)
+
+# A brand-new user with one logged period still gets a (wider) calibrated prediction.
+# If the current cycle has LH tests or wearable temperature, the forecast sharpens
+# automatically — pass lh_tests={date: value} and/or wearable_temp={date: value}.
+f.predicted_start, f.earliest, f.latest, f.days_until, f.mode   # structured fields too
+```
+
+Returns a `PeriodForecast`: the predicted start **date**, a calibrated date
+**interval** (default 80%; pass `confidence=0.95` to widen), `days_until`, and which
+evidence `mode` it used. See `scripts/eval_unified.py` for accuracy by mode.
+
 ## Layout
 
 | Path | What |
