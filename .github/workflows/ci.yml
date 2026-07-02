@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pytest
+      - name: pytest (pymc + data-dependent tests skip when absent)
+        run: python -m pytest -q
+
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate TypeScript port against golden vectors
+        run: node --experimental-strip-types ports/typescript/validate.ts
+
+  swift:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Swift port against golden vectors
+        run: swift run --package-path ports/swift Validate "$GITHUB_WORKSPACE/artifacts"
+
+  kotlin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install Kotlin compiler
+        run: |
+          curl -sSL -o kotlin.zip \
+            https://github.com/JetBrains/kotlin/releases/download/v2.0.21/kotlin-compiler-2.0.21.zip
+          unzip -q kotlin.zip -d "$HOME"
+          echo "$HOME/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Compile & validate Kotlin port against golden vectors
+        run: |
+          cd ports/kotlin
+          kotlinc CyclePredictor.kt Validate.kt -include-runtime -d app.jar
+          java -cp app.jar ValidateKt "$GITHUB_WORKSPACE/artifacts"
