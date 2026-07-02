@@ -30,6 +30,8 @@ data/raw/*
 data/processed/*
 data/interim/*
 !data/**/.gitkeep
+# ...but DO track small download manifests (provenance, not data):
+!data/raw/download_manifest.json
 research/papers/*.pdf
 research/papers/*.PDF
 models/*.pkl

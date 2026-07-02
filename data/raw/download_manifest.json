@@ -1,0 +1,9 @@
+[
+  {
+    "dataset": "fedcycle",
+    "status": "ok",
+    "url": "https://epublications.marquette.edu/cgi/viewcontent.cgi?filename=0&amp;article=1007&amp;context=data_nfp&amp;type=additional",
+    "path": "data/raw/fedcycle/FedCycleData071012.csv",
+    "bytes": 297656
+  }
+]
