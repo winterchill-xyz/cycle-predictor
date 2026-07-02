@@ -1,0 +1,28 @@
+{
+  "version": "0.0.1",
+  "backbone": {
+    "type": "skip_aware_genpoisson",
+    "mu_log": 4.0438,
+    "tau": 0.1001,
+    "pi": 0.05,
+    "xi": -0.9309,
+    "s_max": 3,
+    "lam_min": 12.0,
+    "lam_max": 140.0,
+    "grid": 240
+  },
+  "twophase": {
+    "luteal_mean": 13.85,
+    "luteal_sd": 3.08
+  },
+  "lh_surge": 25.0,
+  "thermal_shift": {
+    "baseline": 6,
+    "run": 3,
+    "delta": 0.15,
+    "search": [
+      5,
+      22
+    ]
+  }
+}

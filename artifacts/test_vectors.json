@@ -1,0 +1,286 @@
+{
+  "model_version": "0.0.1",
+  "tolerance": 0.0001,
+  "vectors": [
+    {
+      "name": "cold_start_no_history",
+      "input": {
+        "history": [],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 29.690401,
+        "sd": 4.10373
+      }
+    },
+    {
+      "name": "single_cycle",
+      "input": {
+        "history": [
+          28
+        ],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 28.718128,
+        "sd": 3.435624
+      }
+    },
+    {
+      "name": "regular_history",
+      "input": {
+        "history": [
+          28,
+          29,
+          28,
+          30,
+          29
+        ],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 28.757843,
+        "sd": 3.003932
+      }
+    },
+    {
+      "name": "short_cycles",
+      "input": {
+        "history": [
+          25,
+          24,
+          26
+        ],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 26.023044,
+        "sd": 2.969686
+      }
+    },
+    {
+      "name": "long_cycles",
+      "input": {
+        "history": [
+          34,
+          33,
+          35
+        ],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 32.907955,
+        "sd": 3.323014
+      }
+    },
+    {
+      "name": "history_with_skip_artifact",
+      "input": {
+        "history": [
+          28,
+          29,
+          56,
+          27,
+          30
+        ],
+        "lh_by_day": null,
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 28.372858,
+        "sd": 2.952281
+      }
+    },
+    {
+      "name": "lh_surge_day15",
+      "input": {
+        "history": [
+          28,
+          29
+        ],
+        "lh_by_day": {
+          "15": 42.0
+        },
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "two_phase_lh",
+        "cycle_length": 28.85,
+        "sd": 3.08
+      }
+    },
+    {
+      "name": "lh_surge_day12",
+      "input": {
+        "history": [
+          30
+        ],
+        "lh_by_day": {
+          "12": 30.0,
+          "13": 55.0
+        },
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "two_phase_lh",
+        "cycle_length": 25.85,
+        "sd": 3.08
+      }
+    },
+    {
+      "name": "lh_no_surge_falls_back",
+      "input": {
+        "history": [
+          29,
+          30
+        ],
+        "lh_by_day": {
+          "14": 8.0,
+          "15": 12.0
+        },
+        "temp_by_day": null
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 29.419424,
+        "sd": 3.257569
+      }
+    },
+    {
+      "name": "wearable_thermal_shift",
+      "input": {
+        "history": [
+          29,
+          30
+        ],
+        "lh_by_day": null,
+        "temp_by_day": {
+          "0": 36.4,
+          "1": 36.4,
+          "2": 36.4,
+          "3": 36.4,
+          "4": 36.4,
+          "5": 36.4,
+          "6": 36.4,
+          "7": 36.4,
+          "8": 36.4,
+          "9": 36.4,
+          "10": 36.4,
+          "11": 36.4,
+          "12": 36.4,
+          "13": 36.4,
+          "14": 36.75,
+          "15": 36.75,
+          "16": 36.75,
+          "17": 36.75,
+          "18": 36.75,
+          "19": 36.75,
+          "20": 36.75,
+          "21": 36.75,
+          "22": 36.75,
+          "23": 36.75
+        }
+      },
+      "expected": {
+        "mode": "two_phase_wearable",
+        "cycle_length": 26.85,
+        "sd": 3.08
+      }
+    },
+    {
+      "name": "lh_beats_wearable",
+      "input": {
+        "history": [
+          28
+        ],
+        "lh_by_day": {
+          "15": 40.0
+        },
+        "temp_by_day": {
+          "0": 36.4,
+          "1": 36.4,
+          "2": 36.4,
+          "3": 36.4,
+          "4": 36.4,
+          "5": 36.4,
+          "6": 36.4,
+          "7": 36.4,
+          "8": 36.4,
+          "9": 36.4,
+          "10": 36.4,
+          "11": 36.4,
+          "12": 36.4,
+          "13": 36.4,
+          "14": 36.75,
+          "15": 36.75,
+          "16": 36.75,
+          "17": 36.75,
+          "18": 36.75,
+          "19": 36.75,
+          "20": 36.75,
+          "21": 36.75,
+          "22": 36.75,
+          "23": 36.75
+        }
+      },
+      "expected": {
+        "mode": "two_phase_lh",
+        "cycle_length": 28.85,
+        "sd": 3.08
+      }
+    },
+    {
+      "name": "flat_temp_falls_back",
+      "input": {
+        "history": [
+          29,
+          30
+        ],
+        "lh_by_day": null,
+        "temp_by_day": {
+          "0": 36.5,
+          "1": 36.5,
+          "2": 36.5,
+          "3": 36.5,
+          "4": 36.5,
+          "5": 36.5,
+          "6": 36.5,
+          "7": 36.5,
+          "8": 36.5,
+          "9": 36.5,
+          "10": 36.5,
+          "11": 36.5,
+          "12": 36.5,
+          "13": 36.5,
+          "14": 36.5,
+          "15": 36.5,
+          "16": 36.5,
+          "17": 36.5,
+          "18": 36.5,
+          "19": 36.5,
+          "20": 36.5,
+          "21": 36.5,
+          "22": 36.5,
+          "23": 36.5,
+          "24": 36.5
+        }
+      },
+      "expected": {
+        "mode": "history",
+        "cycle_length": 29.419424,
+        "sd": 3.257569
+      }
+    }
+  ]
+}
