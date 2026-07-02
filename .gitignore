@@ -1,0 +1,48 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Secrets / credentials ---
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# --- Data & model artifacts ---
+# Raw/processed data and paper PDFs are kept LOCAL, not committed:
+#  - large binaries bloat git history
+#  - most sources are license-restricted (redistribution unclear)
+# We commit the *catalogues* (research/papers.csv, data/DATASETS.md) and the
+# *fetch scripts* that reproduce the download instead.
+data/raw/*
+data/processed/*
+data/interim/*
+!data/**/.gitkeep
+research/papers/*.pdf
+research/papers/*.PDF
+models/*.pkl
+models/*.joblib
+models/*.pt
+models/*.ckpt
+
+# --- Download manifests are tracked (small JSON), caches are not ---
+scripts/.cache/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
