@@ -19,3 +19,4 @@ target-version = "py311"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = ["slow: tests that run PyMC sampling"]
