@@ -44,6 +44,12 @@ models/*.ckpt
 # --- Download manifests are tracked (small JSON), caches are not ---
 scripts/.cache/
 
+# --- language ports build artifacts ---
+ports/**/.build/
+ports/**/.swiftpm/
+ports/**/node_modules/
+ports/**/build/
+
 # --- OS / editor ---
 .DS_Store
 Thumbs.db
