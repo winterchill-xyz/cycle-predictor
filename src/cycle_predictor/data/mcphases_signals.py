@@ -34,6 +34,7 @@ def load_signals(path: str | Path = DEFAULT_DIR) -> dict[str, dict]:
     """Return {signal_name: {(id, interval, day): value}} for the daily biosignals."""
     path = Path(path)
     return {
+        "lh": _load_daily(path / "hormones_and_selfreport.csv", "day_in_study", "lh"),
         "temp": _load_daily(path / "computed_temperature.csv",
                             "sleep_start_day_in_study", "nightly_temperature",
                             keep=lambda r: r.get("type") == "SKIN"),
