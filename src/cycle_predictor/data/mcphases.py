@@ -62,7 +62,7 @@ def load(path: str | Path = DEFAULT_DIR, **kw) -> list[Cycle]:
 
 
 def iter_cycles(path: str | Path = DEFAULT_DIR, *, min_len: int = 15,
-                max_len: int = 60, gap: int = 3) -> Iterator[Cycle]:
+                max_len: int = 60, gap: int = 3, lh_surge: float = 25.0) -> Iterator[Cycle]:
     path = Path(path)
     horm = path / "hormones_and_selfreport.csv"
     if not horm.exists():
@@ -91,15 +91,26 @@ def iter_cycles(path: str | Path = DEFAULT_DIR, *, min_len: int = 15,
             length = b - a
             if not (min_len <= length <= max_len):
                 continue
+            # Ovulation ≈ the LH surge (first day LH ≥ threshold); this gives the
+            # canonical ~14-day luteal phase. Fall back to the in-cycle LH peak, but
+            # flag whether a real surge was seen (surge markers give a tight luteal).
             window = {d: v for d, v in lh_by_day.items() if a <= d < b}
-            ovulation = (max(window, key=window.get) - a) if window else None
+            confirmed = False
+            if window:
+                surge = sorted(d for d, v in window.items() if v >= lh_surge)
+                ovulation = (surge[0] if surge else max(window, key=window.get)) - a
+                confirmed = bool(surge)
+            else:
+                ovulation = None
             yield Cycle(
                 user_id=f"{sid}_{interval}",
                 cycle_number=k,
                 cycle_length_days=length,
                 period_length_days=run_span.get(a),
                 estimated_ovulation_day=ovulation,
-                extra={"subject": sid, "interval": interval, "age": age},
+                extra={"subject": sid, "interval": interval, "age": age,
+                       "onset_day": a, "next_onset_day": b,     # absolute day_in_study
+                       "ovulation_confirmed": confirmed},       # True ⇒ real LH surge
             )
 
 
