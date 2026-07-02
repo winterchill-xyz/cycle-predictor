@@ -20,10 +20,12 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from cycle_predictor.data import fedcycle                    # noqa: E402
+from cycle_predictor.data import fedcycle, mcphases          # noqa: E402
 from cycle_predictor.eval import (                            # noqa: E402
     evaluate, evaluate_prob, split, user_sequences,
 )
+
+DATASETS = {"fedcycle": fedcycle, "mcphases": mcphases}
 from cycle_predictor.models import baselines                  # noqa: E402
 from cycle_predictor.models.hierarchical import HierarchicalBayes  # noqa: E402
 from cycle_predictor.models.generative import (                   # noqa: E402
@@ -33,14 +35,15 @@ from cycle_predictor.models.generative import (                   # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--dataset", choices=list(DATASETS), default="fedcycle")
     ap.add_argument("--fast", action="store_true", help="method-of-moments fit (skip PyMC)")
     ap.add_argument("--frac-train", type=float, default=0.7)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
-    seqs = user_sequences(fedcycle.load())
+    seqs = user_sequences(DATASETS[args.dataset].load())
     train, test = split(seqs, args.frac_train, seed=args.seed)
-    print(f"FedCycle: {len(seqs)} users → {len(train)} train / {len(test)} test "
+    print(f"{args.dataset}: {len(seqs)} users → {len(train)} train / {len(test)} test "
           f"(held-out). Test cycles: {sum(len(s) for s in test)}\n")
 
     if args.fast:
@@ -78,9 +81,11 @@ def main() -> int:
     print(f"  v2 skip-poisson:      {evaluate_prob(gen.predict, test)}")
     print(f"  v2.1 skip-genpoisson: {evaluate_prob(genp.predict, test)}")
     print("  (well-calibrated ⇒ e.g. the 80% interval covers ~80% of held-out cycles)")
-    print("\nNote: FedCycle has ~no skip artifacts, so point accuracy is ~tied. v2 (plain")
-    print("Poisson) over-covers; v2.1 (Generalized Poisson) fixes calibration. See")
-    print("scripts/demo_skip_robustness.py for where the skip-aware models win on point.")
+    avg_hist = sum(len(s) for s in seqs) / len(seqs)
+    print(f"\nNote: ~{avg_hist:.0f} cycles/user in {args.dataset}. The hierarchical models beat")
+    print("point baselines most when histories are short (few cycles ⇒ population prior helps).")
+    print("v2 (plain Poisson) over-covers; v2.1 (Generalized Poisson) calibrates. Skip-aware")
+    print("models (v2/v2.1) win on point accuracy under skipped logs — see demo_skip_robustness.py.")
     return 0
 
 
