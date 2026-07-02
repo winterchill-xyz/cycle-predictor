@@ -22,18 +22,26 @@ Ordered by how easily a team can actually train on them today. Raw files live in
   product/redistribution.** Do not commit the raw file.
 - **Fetch:** `python scripts/fetch_datasets.py --only fedcycle`
 
-### mcPHASES  — `data/raw/mcphases/`
+### mcPHASES  — `data/raw/mcphases/`  ✅ OBTAINED
 - **What:** multimodal, **hormone-verified** ground truth: daily urinary LH, E3G,
-  PdG (Mira Plus) + Fitbit Sense (HR, skin temperature, sleep, respiratory rate,
-  activity, stress) + partial Dexcom G6 CGM. Four-phase labels. Built to support ML
-  ovulation/fertile-window prediction and non-invasive hormonal-state predictors.
-- **Scale:** modest cohort, dense per-subject multimodal time series.
+  PdG (Mira) + Fitbit Sense (HR, skin/wrist temperature, sleep, respiratory rate,
+  activity, stress) + partial Dexcom G6 CGM. Four-phase labels
+  (Menstrual/Follicular/Fertility/Luteal). Built to support ML ovulation/
+  fertile-window prediction and non-invasive hormonal-state predictors.
+- **Scale (as extracted):** 42 subjects, 5,659 subject-days over two study waves
+  (2022, 2024); the adapter derives **128 cycles across 60 (subject, interval)
+  units** (mean 29.8 d, sd 4.5) with LH-peak ovulation (median day 16). ~2
+  cycles/user ⇒ a strong **cold-start** test.
 - **Landing page:** https://physionet.org/content/mcphases/  (v1.0.0, DOI 10.13026/zx6a-2c81)
 - **Companion paper:** https://www.nature.com/articles/s41597-026-06805-3
-- **Access:** **Open but CREDENTIALED** — requires a free PhysioNet account,
-  credentialing, and signing a Data Use Agreement. **Not a plain wget.**
-- **Fetch:** semi-automated — `scripts/fetch_datasets.py --only mcphases` will use
-  your PhysioNet login if provided; otherwise it prints the manual steps.
+- **Access:** **credentialed** (PhysioNet account + DUA). Adapter:
+  `src/cycle_predictor/data/mcphases.py` (cycles from `hormones_and_selfreport.csv`).
+- **Local layout:** we extracted only the modeling-relevant CSVs (hormones +
+  self-report, subject-info, computed/wrist temperature, resting HR, respiratory
+  rate, sleep/stress scores). The multi-GB intraday files (heart_rate 2 GB,
+  calories 646 MB, distance, steps, oxygen-variation) were **not** extracted — add
+  them from the zip if the signal-rich model (M5) needs intraday features.
+- ⚠ **Do not commit or redistribute** the raw files (DUA) — gitignored.
 
 ---
 

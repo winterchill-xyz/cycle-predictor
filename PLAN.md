@@ -91,10 +91,12 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
 - Privacy: menstrual data is sensitive; keep raw data local and gitignored.
 
 ## Immediate next actions
-1. Acquire a more variable dataset (mcPHASES credentialing, or a request to Clue /
-   Natural Cycles / Sympto-Kindara) to exercise irregular/PCOS + real skip handling.
-2. Per-user skip probability π_i and dispersion (currently population-level).
-3. **M4:** LSTM/GRU + LightGBM baselines (needs torch/lightgbm on the 3.12 venv) to
-   confirm they don't beat the generative model on point MAE (per the literature).
-4. Full-Bayesian GP fit (PyMC) with careful handling of the truncated support, to
-   propagate ξ uncertainty instead of the moment-matched point estimate.
+1. ✅ mcPHASES obtained + adapter (128 hormone-verified cycles). Confirmed the
+   hierarchical model's edge grows in the cold-start regime (see RESULTS.md).
+2. **M5 (now unblocked):** signal-rich model using mcPHASES LH / wrist-temperature /
+   HR to predict ovulation and refine next-period timing (BBT/phase-latent model).
+3. Pool the same subject's 2022 & 2024 intervals to share λ_i across waves.
+4. **M4:** LSTM/GRU + LightGBM baselines (torch/lightgbm on the 3.12 venv) to confirm
+   they don't beat the generative model on point MAE.
+5. Full-Bayesian GP fit (PyMC) handling the truncated support, to propagate ξ
+   uncertainty instead of the moment-matched point estimate.

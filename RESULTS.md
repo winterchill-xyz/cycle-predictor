@@ -84,6 +84,30 @@ Calibration on held-out FedCycle (80% interval should cover ~80%):
 **v2.1 is the best of both:** skip-robust like v2 (same point behavior under the
 demo's injected skips) *and* calibrated like v1. It's the current recommended model.
 
+## Cross-dataset check — mcPHASES (hormone-verified)
+
+Same harness, `--dataset mcphases` (128 cycles / 60 subject-intervals; ~2
+cycles/user, so almost every prediction is cold-start). 70/30 user-holdout,
+18 test users / 22 scored predictions — small, so read as a trend, not a decimal.
+
+| predictor | MAE (d) | RMSE (d) | cold-start MAE (d) |
+|-----------|--------:|---------:|-------------------:|
+| constant_28 | 2.91 | 3.48 | 2.86 |
+| personal_mean | 2.90 | 3.58 | 2.79 |
+| personal_median | 2.89 | 3.56 | 2.79 |
+| **hierarchical_v1** | **2.06** | 2.83 | **1.88** |
+| skip_generative_v2 | 2.07 | 2.78 | 1.91 |
+| skip_genpoisson_v2.1 | 2.16 | 2.81 | 2.00 |
+
+**The headline finding:** unlike on FedCycle (where users have ~12 cycles and the
+Bayesian model barely edges the baselines), on mcPHASES the hierarchical models
+**beat the point baselines decisively** — MAE 2.06 vs 2.90, cold-start 1.88 vs 2.79.
+The reason is exactly the mechanism we built for: with only ~2 cycles per user, the
+population prior does the heavy lifting that a per-user mean can't. **This is the
+real-world regime** — a new app user with one or two logged cycles — and it's where
+partial pooling pays off most. mcPHASES also gives LH-verified ovulation (median day
+16), the substrate for the future signal-rich model (M5).
+
 ## Caveats
 
 - FedCycle is small and unusually regular (NFP users) — absolute MAEs here are lower
