@@ -13,7 +13,7 @@ def test_cycle_series_shape():
     signals = mcphases_signals.load_signals()
     cycle = mcphases.load()[0]
     series = mcphases_signals.cycle_series(cycle, signals)
-    assert set(series) == {"temp", "rhr", "resp"}
+    assert set(series) == {"lh", "temp", "rhr", "resp"}
     # day-of-cycle keys are non-negative and within the cycle length
     for days in series.values():
         assert all(0 <= k < cycle.cycle_length_days for k in days)
