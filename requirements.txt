@@ -1,0 +1,35 @@
+# --- core data / numerics ---
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+python-dateutil>=2.8
+
+# --- classical ML / baselines ---
+scikit-learn>=1.4
+lightgbm>=4.1
+statsmodels>=0.14
+
+# --- Bayesian / generative (the SOTA family for this problem) ---
+# PyMC for hierarchical generative models; numpyro/jax as a faster alternative backend.
+pymc>=5.10
+arviz>=0.17          # posterior diagnostics + calibration checks
+numpyro>=0.13        # optional fast NUTS backend
+
+# --- sequence-model baselines (LSTM/GRU) ---
+# torch is heavy; install separately if you only want the Bayesian path.
+torch>=2.1
+
+# --- viz / notebooks ---
+matplotlib>=3.8
+seaborn>=0.13
+jupyter>=1.0
+
+# --- downloaders (scripts/) ---
+requests>=2.31
+beautifulsoup4>=4.12
+tqdm>=4.66
+python-dotenv>=1.0
+
+# --- dev ---
+ruff>=0.3
+pytest>=8.0
