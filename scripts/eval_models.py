@@ -12,6 +12,7 @@ to win on.
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 import warnings
 from pathlib import Path
@@ -25,6 +26,7 @@ from cycle_predictor.eval import (                            # noqa: E402
 )
 from cycle_predictor.models import baselines                  # noqa: E402
 from cycle_predictor.models.hierarchical import HierarchicalBayes  # noqa: E402
+from cycle_predictor.models.generative import SkipAwareGenerative  # noqa: E402
 
 
 def main() -> int:
@@ -41,15 +43,20 @@ def main() -> int:
 
     if args.fast:
         model = HierarchicalBayes.fit_moments(train)
+        gen = SkipAwareGenerative.fit_moments(train, pi=0.05)
     else:
-        print("fitting hierarchical model with PyMC…")
+        print("fitting hierarchical (v1) and skip-aware generative (v2) with PyMC…")
         model = HierarchicalBayes.fit(train, draws=1000, tune=1000, chains=2, seed=args.seed)
-    print(f"fitted [{model.diagnostics.get('method')}]: "
-          f"mu_pop={model.mu_pop:.2f}d  tau={model.tau2**0.5:.2f}d  sigma={model.sigma2**0.5:.2f}d\n")
+        gen = SkipAwareGenerative.fit(train, draws=1000, tune=1000, chains=2, seed=args.seed)
+    print(f"v1 [{model.diagnostics.get('method')}]: mu_pop={model.mu_pop:.2f}  "
+          f"tau={model.tau2**0.5:.2f}  sigma={model.sigma2**0.5:.2f}")
+    print(f"v2 [{gen.diagnostics.get('method')}]: rate={math.exp(gen.mu_log):.2f}  "
+          f"pi={gen.pi:.3f} (skips/cycle={gen.expected_skip_rate():.3f})\n")
 
     # ---- overall point accuracy on held-out users -------------------------------
     predictors = dict(baselines.registry())
-    predictors["hierarchical_bayes"] = model.point
+    predictors["hierarchical_v1"] = model.point
+    predictors["skip_generative_v2"] = gen.point
 
     hdr = f"{'predictor':20s} {'MAE':>6s} {'RMSE':>6s} {'±1d':>6s} {'±2d':>6s} {'coldMAE':>8s}"
     print(hdr); print("-" * len(hdr))
@@ -59,11 +66,13 @@ def main() -> int:
         print(f"{name:20s} {m.mae:6.2f} {m.rmse:6.2f} {m.within1:5.0%} {m.within2:5.0%} "
               f"{cold.mae:8.2f}")
 
-    # ---- calibration of the Bayesian intervals ----------------------------------
-    pm = evaluate_prob(model.predict, test)
-    print("\ncalibration (hierarchical_bayes):")
-    print(f"  {pm}")
+    # ---- calibration of the two Bayesian models ---------------------------------
+    print("\ncalibration:")
+    print(f"  v1 hierarchical:    {evaluate_prob(model.predict, test)}")
+    print(f"  v2 skip-generative: {evaluate_prob(gen.predict, test)}")
     print("  (well-calibrated ⇒ e.g. the 80% interval covers ~80% of held-out cycles)")
+    print("\nNote: FedCycle has ~no skip artifacts, so v2≈v1 here. "
+          "See scripts/demo_skip_robustness.py for where v2 wins.")
     return 0
 
 
