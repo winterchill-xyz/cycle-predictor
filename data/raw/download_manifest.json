@@ -1,9 +1,19 @@
 [
   {
     "dataset": "fedcycle",
-    "status": "ok",
-    "url": "https://epublications.marquette.edu/cgi/viewcontent.cgi?filename=0&amp;article=1007&amp;context=data_nfp&amp;type=additional",
+    "status": "cached",
     "path": "data/raw/fedcycle/FedCycleData071012.csv",
     "bytes": 297656
+  },
+  {
+    "dataset": "mcphases",
+    "status": "manual",
+    "steps": [
+      "1. Create a free account at https://physionet.org/",
+      "2. Get credentialed (training + ID verification) and sign the mcPHASES DUA",
+      "3. Download from https://physionet.org/content/mcphases/ (or the files/ tree)",
+      "4. Or set PHYSIONET_USER / PHYSIONET_PASS and re-run to pull via wget"
+    ],
+    "files_base": "https://physionet.org/files/mcphases/1.0.0/"
   }
 ]
