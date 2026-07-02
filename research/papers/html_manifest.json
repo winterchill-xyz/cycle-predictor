@@ -1,0 +1,54 @@
+[
+  {
+    "key": "li2022_adherence",
+    "arxiv_id": "2102.12439",
+    "html": {
+      "status": "ok",
+      "source": "ar5iv",
+      "bytes": 909240
+    },
+    "source": {
+      "status": "ok",
+      "bytes": 1043546
+    }
+  },
+  {
+    "key": "duttweiler2025_skiptrack",
+    "arxiv_id": "2508.05845",
+    "html": {
+      "status": "ok",
+      "source": "arxiv-native",
+      "bytes": 183269
+    },
+    "source": {
+      "status": "ok",
+      "bytes": 1390294
+    }
+  },
+  {
+    "key": "fukaya2017_statespace",
+    "arxiv_id": "1606.02536",
+    "html": {
+      "status": "ok",
+      "source": "ar5iv",
+      "bytes": 1855496
+    },
+    "source": {
+      "status": "ok",
+      "bytes": 130246
+    }
+  },
+  {
+    "key": "prieto2023_benchmark",
+    "arxiv_id": "2308.07927",
+    "html": {
+      "status": "ok",
+      "source": "ar5iv",
+      "bytes": 324785
+    },
+    "source": {
+      "status": "ok",
+      "bytes": 102815
+    }
+  }
+]

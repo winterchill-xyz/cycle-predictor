@@ -1,0 +1,117 @@
+[
+  {
+    "key": "li2022_adherence",
+    "status": "ok",
+    "route": "explicit",
+    "url": "https://arxiv.org/pdf/2102.12439",
+    "path": "research/papers/li2022_adherence.pdf",
+    "bytes": 1586129
+  },
+  {
+    "key": "urteaga2021_genpoisson",
+    "status": "ok",
+    "route": "explicit",
+    "url": "https://proceedings.mlr.press/v149/urteaga21a/urteaga21a.pdf",
+    "path": "research/papers/urteaga2021_genpoisson.pdf",
+    "bytes": 2736265
+  },
+  {
+    "key": "duttweiler2025_skiptrack",
+    "status": "ok",
+    "route": "explicit",
+    "url": "https://arxiv.org/pdf/2508.05845",
+    "path": "research/papers/duttweiler2025_skiptrack.pdf",
+    "bytes": 948147
+  },
+  {
+    "key": "fukaya2017_statespace",
+    "status": "ok",
+    "route": "explicit",
+    "url": "https://arxiv.org/pdf/1606.02536",
+    "path": "research/papers/fukaya2017_statespace.pdf",
+    "bytes": 547052
+  },
+  {
+    "key": "depaulaoliveira2021_mixedeffect",
+    "status": "ok",
+    "route": "perplexity",
+    "url": "https://www.pure.ed.ac.uk/ws/portalfiles/portal/204711050/v1_stamped.pdf",
+    "path": "research/papers/depaulaoliveira2021_mixedeffect.pdf",
+    "bytes": 4003578
+  },
+  {
+    "key": "symul2022_hsmm",
+    "status": "ok",
+    "route": "openalex",
+    "url": "https://ieeexplore.ieee.org/ielx7/6221020/9729643/09531515.pdf",
+    "path": "research/papers/symul2022_hsmm.pdf",
+    "bytes": 4329034
+  },
+  {
+    "key": "bull2019_naturalcycles",
+    "status": "ok",
+    "route": "unpaywall",
+    "url": "https://www.nature.com/articles/s41746-019-0152-7.pdf",
+    "path": "research/papers/bull2019_naturalcycles.pdf",
+    "bytes": 1570753
+  },
+  {
+    "key": "symul2019_bigdata",
+    "status": "ok",
+    "route": "unpaywall",
+    "url": "https://www.nature.com/articles/s41746-019-0139-4.pdf",
+    "path": "research/papers/symul2019_bigdata.pdf",
+    "bytes": 1705402
+  },
+  {
+    "key": "li2020_variation",
+    "status": "ok",
+    "route": "unpaywall",
+    "url": "https://www.nature.com/articles/s41746-020-0269-8.pdf",
+    "path": "research/papers/li2020_variation.pdf",
+    "bytes": 1871268
+  },
+  {
+    "key": "goodale2019_ava",
+    "status": "failed",
+    "tried": [
+      "https://doi.org/10.2196/13404",
+      "https://doi.org/10.2196/13404",
+      "https://www.ncbi.nlm.nih.gov/pmc/articles/6495289",
+      "https://doi.org/10.5167/uzh-184666"
+    ],
+    "landing": "https://www.jmir.org/2019/4/e13404/"
+  },
+  {
+    "key": "bbt_hr_rbej2022",
+    "status": "ok",
+    "route": "unpaywall",
+    "url": "https://rbej.biomedcentral.com/counter/pdf/10.1186/s12958-022-00993-4",
+    "path": "research/papers/bbt_hr_rbej2022.pdf",
+    "bytes": 1972855
+  },
+  {
+    "key": "mcphases2026_dataset",
+    "status": "ok",
+    "route": "unpaywall",
+    "url": "https://www.nature.com/articles/s41597-026-06805-3.pdf",
+    "path": "research/papers/mcphases2026_dataset.pdf",
+    "bytes": 1589196
+  },
+  {
+    "key": "bortot2006_bayeshier",
+    "status": "ok",
+    "route": "perplexity",
+    "url": "https://cran.r-project.org/web/packages/skipTrack/skipTrack.pdf",
+    "path": "research/papers/bortot2006_bayeshier.pdf",
+    "bytes": 178276
+  },
+  {
+    "key": "prieto2023_benchmark",
+    "status": "ok",
+    "route": "explicit",
+    "url": "https://arxiv.org/pdf/2308.07927",
+    "path": "research/papers/prieto2023_benchmark.pdf",
+    "bytes": 242409
+  }
+]

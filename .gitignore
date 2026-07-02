@@ -34,6 +34,8 @@ data/interim/*
 !data/raw/download_manifest.json
 research/papers/*.pdf
 research/papers/*.PDF
+research/papers/*.html
+research/papers/*.tar.gz
 models/*.pkl
 models/*.joblib
 models/*.pt
