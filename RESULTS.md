@@ -63,13 +63,26 @@ Naive/v1 estimates get dragged up by merged cycles; **v2 stays flat** because it
 attributes the long cycle to a forgotten log, not a real 56-day cycle. That gap is
 the entire reason the generative approach is the literature's SOTA.
 
-**Known limitation (→ v2.1):** v2's predictive *intervals* over-cover on clean data
-(80% → 98%) because a plain **Poisson** likelihood is over-dispersed for cycle
-lengths (Poisson sd ≈ √29 ≈ 5.4 d, but real within-user sd ≈ 2.9 d — cycle lengths
-are *under*-dispersed). This is exactly why Urteaga et al. use the **Generalized
-Poisson** (which fits mean and variance separately). Swapping the likelihood is the
-planned v2.1 calibration fix; v2's point-prediction skip-robustness (the headline)
-already holds.
+## M3 v2.1 — Generalized-Poisson (calibration fix)  ✅
+
+v2's plain-**Poisson** intervals over-cover (80% → 98%) because Poisson is
+over-dispersed for cycle lengths (Poisson sd ≈ √29 ≈ 5.4 d, but real within-user
+sd ≈ 2.9 d — cycle lengths are *under*-dispersed). The **Generalized Poisson**
+(`SkipAwareGenPoisson`) adds a dispersion parameter ξ (mean = λ/(1−ξ),
+var = λ/(1−ξ)³); ξ < 0 gives under-dispersion. It's closed under convolution, so the
+skip marginalization is unchanged. We fit ξ by moment-matching φ = var/mean
+(on FedCycle φ ≈ 0.28 → ξ ≈ −0.88) — literally fitting mean and variance separately.
+
+Calibration on held-out FedCycle (80% interval should cover ~80%):
+
+| model | 50% | 80% | 95% | point MAE | cold MAE |
+|-------|----:|----:|----:|----------:|---------:|
+| v1 hierarchical (Normal) | 61% | 85% | 96% | 2.14 | 2.23 |
+| v2 skip-Poisson | 86% | 98% | 100% | 2.13 | 2.30 |
+| **v2.1 skip-GenPoisson** | **62%** | **87%** | **97%** | **2.14** | **2.23** |
+
+**v2.1 is the best of both:** skip-robust like v2 (same point behavior under the
+demo's injected skips) *and* calibrated like v1. It's the current recommended model.
 
 ## Caveats
 

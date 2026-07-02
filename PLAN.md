@@ -63,9 +63,12 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
   posterior predicts. Explains a ~2× cycle as a forgotten log instead of a real one.
 - Proven by `scripts/demo_skip_robustness.py`: under injected skips v2 holds ~2.3 d
   MAE while v1/naive degrade to 10–12 d at p=0.3. On clean FedCycle v2 ≈ v1.
-- **v2.1 (next):** swap the Poisson likelihood for the **Generalized Poisson**
-  (Urteaga) — Poisson is over-dispersed for cycle lengths, so v2's intervals
-  over-cover (80% → 98%). GP fits mean and variance separately → calibrated.
+### M3 v2.1 — Generalized-Poisson likelihood  ✅
+- `models/generative.py::SkipAwareGenPoisson`: GP(λ, ξ) component (mean = λ/(1−ξ),
+  var = λ/(1−ξ)³), ξ < 0 for under-dispersion, closed under convolution so the skip
+  marginalization carries over. ξ fit by moment-matching φ = var/mean.
+- Fixes v2's over-coverage (80% interval 98% → 87%) while keeping skip-robustness
+  and point MAE. **Current recommended model.** See RESULTS.md.
 
 ### M4 — Baselines to beat/borrow: sequence + GBM
 - LSTM/GRU over the cycle-length sequence (+ covariates); LightGBM on engineered
@@ -88,9 +91,10 @@ Raw files stay immutable in `data/raw/`; adapters write tidy parquet to
 - Privacy: menstrual data is sensitive; keep raw data local and gitignored.
 
 ## Immediate next actions
-1. **M3 v2.1:** Generalized-Poisson likelihood to fix v2's interval over-coverage.
-2. Acquire a more variable dataset (mcPHASES credentialing, or a request to Clue /
+1. Acquire a more variable dataset (mcPHASES credentialing, or a request to Clue /
    Natural Cycles / Sympto-Kindara) to exercise irregular/PCOS + real skip handling.
+2. Per-user skip probability π_i and dispersion (currently population-level).
 3. **M4:** LSTM/GRU + LightGBM baselines (needs torch/lightgbm on the 3.12 venv) to
    confirm they don't beat the generative model on point MAE (per the literature).
-4. Per-user skip probability π_i (currently population-level) for v2.
+4. Full-Bayesian GP fit (PyMC) with careful handling of the truncated support, to
+   propagate ξ uncertainty instead of the moment-matched point estimate.
